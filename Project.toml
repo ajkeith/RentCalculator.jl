@@ -1,0 +1,13 @@
+name = "RentCalculator"
+uuid = "87c9ae16-5150-4b0e-9d8d-e4072da0bf71"
+authors = ["Andrew Keith"]
+version = "0.1.0"
+
+[compat]
+julia = "1.4"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
