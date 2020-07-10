@@ -29,6 +29,6 @@ using Test
                 400.0, # common fee (dollars)
                 20.0, # percent of common fee that is deductible (percent)) 
     # cost output format: (total, initial costs, recurring costs, opportunity costs, net proceeds)
-    @test cost(params, option="rent") = (251_705, 3_500, 225_939, 25_766, -3_500)
-    @test cost(params, option="buy") = (186_786, 184_000, 253_479, 82_085, 332_778)
+    @test cost(params, option="rent") == (251_705, 3_500, 225_939, 25_766, -3_500)
+    @test cost(params, option="buy") == (186_786, 184_000, 253_479, 82_085, 332_778)
 end
