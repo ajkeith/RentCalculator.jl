@@ -9,6 +9,7 @@ NPFinancial = "d92e12fc-aea5-418c-9372-8108a4db1700"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 
 [compat]
+MLJ = "0.13"
 julia = "1.4"
 
 [extras]
