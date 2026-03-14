@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rent vs. Buy Calculator</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #f0f2f5;
+      --surface:   #ffffff;
+      --border:    #dde1e7;
+      --text:      #1a1d23;
+      --muted:     #6b7280;
+      --accent:    #2563eb;
+      --rent-bg:   #eff6ff;
+      --rent-fg:   #1d4ed8;
+      --buy-bg:    #f0fdf4;
+      --buy-fg:    #15803d;
+      --winner-bg: #fefce8;
+      --winner-fg: #854d0e;
+      --danger:    #dc2626;
+      --radius:    10px;
+      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────────────── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .page-header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: .92rem;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+    }
+    .card-title {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Parameter groups ──────────────────────────────────────────────────── */
+    .param-section { margin-bottom: 18px; }
+    .param-section-title {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .param-row {
+      display: grid;
+      grid-template-columns: 1fr 110px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .param-row label {
+      font-size: .82rem;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .param-row label small {
+      display: block;
+      color: var(--muted);
+      font-size: .73rem;
+    }
+    .param-row input[type="number"] {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .85rem;
+      text-align: right;
+      background: #fafafa;
+      transition: border-color .15s;
+    }
+    .param-row input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    /* ── Results ────────────────────────────────────────────────────────────── */
+    .results-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      border: 1.5px solid transparent;
+    }
+    .summary-card.rent {
+      background: var(--rent-bg);
+      border-color: #bfdbfe;
+    }
+    .summary-card.buy {
+      background: var(--buy-bg);
+      border-color: #bbf7d0;
+    }
+    .summary-card .label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .summary-card .total-amount {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    .summary-card.rent .total-amount { color: var(--rent-fg); }
+    .summary-card.buy  .total-amount { color: var(--buy-fg); }
+    .summary-card .subtitle { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+
+    .verdict-banner {
+      background: var(--winner-bg);
+      border: 1.5px solid #fde68a;
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: .88rem;
+    }
+    .verdict-banner .icon { font-size: 1.3rem; flex-shrink: 0; }
+    .verdict-banner strong { color: var(--winner-fg); }
+
+    /* ── Breakdown table ───────────────────────────────────────────────────── */
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    .breakdown-table thead th {
+      text-align: right;
+      font-size: .73rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .breakdown-table thead th:first-child { text-align: left; }
+    .breakdown-table tbody tr:hover { background: #f8f9fb; }
+    .breakdown-table tbody td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f0f2f5;
+      text-align: right;
+    }
+    .breakdown-table tbody td:first-child { text-align: left; color: var(--muted); }
+    .breakdown-table tbody tr.total-row td {
+      font-weight: 700;
+      border-top: 2px solid var(--border);
+      border-bottom: none;
+      padding-top: 10px;
+    }
+    .breakdown-table tbody tr.total-row td:first-child { color: var(--text); }
+    .breakdown-table .rent-val { color: var(--rent-fg); }
+    .breakdown-table .buy-val  { color: var(--buy-fg); }
+    .breakdown-table .winner   { font-weight: 700; }
+
+    /* ── Bar chart ──────────────────────────────────────────────────────────── */
+    .chart-section { margin-top: 20px; }
+    .chart-title {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .bar-group { margin-bottom: 10px; }
+    .bar-label {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .bar-track {
+      background: #f0f2f5;
+      border-radius: 99px;
+      height: 18px;
+      overflow: hidden;
+      display: flex;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+      min-width: 2px;
+    }
+    .bar-fill.rent-bar { background: #3b82f6; }
+    .bar-fill.buy-bar  { background: #22c55e; }
+
+    /* ── Assumptions note ───────────────────────────────────────────────────── */
+    .note {
+      font-size: .76rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>🏠 Rent vs. Buy Calculator</h1>
+  <p>Adjust any parameter — results update instantly.</p>
+</header>
+
+<div class="layout">
+  <!-- ── Left: parameter inputs ─────────────────────────────────────────── -->
+  <aside>
+    <div class="card">
+      <div class="card-title">Parameters</div>
+
+      <div class="param-section">
+        <div class="param-section-title">🏡 Home &amp; Mortgage</div>
+        <div class="param-row">
+          <label>Purchase price <small>dollars</small></label>
+          <input type="number" id="buy_price" value="800000" step="10000" min="0">
+        </div>
+        <div class="param-row">
+          <label>Years in residence <small>years</small></label>
+          <input type="number" id="stay" value="5" step="1" min="1" max="40">
+        </div>
+        <div class="param-row">
+          <label>Mortgage rate <small>%</small></label>
+          <input type="number" id="mortgage_rate" value="3.5" step="0.1" min="0">
+        </div>
+        <div class="param-row">
+          <label>Down payment <small>% of price</small></label>
+          <input type="number" id="mortgage_down" value="20" step="1" min="0" max="100">
+        </div>
+        <div class="param-row">
+          <label>Mortgage term <small>years</small></label>
+          <input type="number" id="mortgage_length" value="30" step="5" min="5" max="40">
+        </div>
+      </div>
+
+      <div class="param-section">
+        <div class="param-section-title">🔑 Renting</div>
+        <div class="param-row">
+          <label>Monthly rent <small>$/month</small></label>
+          <input type="number" id="rent_monthly" value="3600" step="100" min="0">
+        </div>
+        <div class="param-row">
+          <label>Security deposit <small>dollars</small></label>
+          <input type="number" id="rent_deposit" value="3500" step="100" min="0">
+        </div>
+        <div class="param-row">
+          <label>Broker fee <small>dollars</small></label>
+          <input type="number" id="rent_broker" value="0" step="100" min="0">
+        </div>
+        <div class="param-row">
+          <label>Renters insurance <small>% of annual rent</small></label>
+          <input type="number" id="rent_insurance" value="0.5" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="param-section">
+        <div class="param-section-title">📈 Market &amp; Growth</div>
+        <div class="param-row">
+          <label>Home appreciation <small>% / year</small></label>
+          <input type="number" id="price_rate" value="4" step="0.5" min="0">
+        </div>
+        <div class="param-row">
+          <label>Annual rent increase <small>% / year</small></label>
+          <input type="number" id="rent_rate" value="2" step="0.5" min="0">
+        </div>
+        <div class="param-row">
+          <label>Market return <small>% / year (nominal)</small></label>
+          <input type="number" id="market_rate" value="7" step="0.5" min="0">
+        </div>
+        <div class="param-row">
+          <label>Inflation rate <small>% / year</small></label>
+          <input type="number" id="inflation_rate" value="2" step="0.25" min="0">
+        </div>
+      </div>
+
+      <div class="param-section">
+        <div class="param-section-title">🧾 Taxes</div>
+        <div class="param-row">
+          <label>Property tax <small>% of home value / year</small></label>
+          <input type="number" id="tax_property" value="1" step="0.1" min="0">
+        </div>
+        <div class="param-row">
+          <label>Marginal income tax <small>%</small></label>
+          <input type="number" id="tax_marginal" value="33.3" step="1" min="0" max="100">
+        </div>
+        <div class="param-row">
+          <label>Investment / cap-gains tax <small>%</small></label>
+          <input type="number" id="tax_investment" value="24.3" step="1" min="0" max="100">
+        </div>
+        <div class="param-row">
+          <label>Capital gains exclusion <small>dollars</small></label>
+          <input type="number" id="tax_capitalgains" value="100000" step="10000" min="0">
+        </div>
+      </div>
+
+      <div class="param-section">
+        <div class="param-section-title">🔧 Ownership Costs</div>
+        <div class="param-row">
+          <label>Buying closing costs <small>% of price</small></label>
+          <input type="number" id="buy_closing" value="3" step="0.5" min="0">
+        </div>
+        <div class="param-row">
+          <label>Selling costs <small>% of sale price</small></label>
+          <input type="number" id="buy_selling" value="5" step="0.5" min="0">
+        </div>
+        <div class="param-row">
+          <label>Renovation <small>% of price / year</small></label>
+          <input type="number" id="buy_renovation" value="0.5" step="0.1" min="0">
+        </div>
+        <div class="param-row">
+          <label>Maintenance <small>% of price / year</small></label>
+          <input type="number" id="buy_maintenance" value="0.5" step="0.1" min="0">
+        </div>
+        <div class="param-row">
+          <label>Homeowners insurance <small>% of price / year</small></label>
+          <input type="number" id="buy_insurance" value="0.2" step="0.1" min="0">
+        </div>
+        <div class="param-row">
+          <label>Extra utilities vs. renting <small>$/month</small></label>
+          <input type="number" id="buy_utilities" value="200" step="50" min="0">
+        </div>
+        <div class="param-row">
+          <label>HOA / common fee <small>$/month</small></label>
+          <input type="number" id="buy_common" value="400" step="50" min="0">
+        </div>
+        <div class="param-row">
+          <label>Deductible HOA fraction <small>%</small></label>
+          <input type="number" id="buy_deductible" value="20" step="5" min="0" max="100">
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Right: results ─────────────────────────────────────────────────── -->
+  <main>
+    <div class="card">
+      <div class="card-title">Results</div>
+
+      <div class="results-top">
+        <div class="summary-card rent">
+          <div class="label">Renting</div>
+          <div class="total-amount" id="rent-total">—</div>
+          <div class="subtitle">net cost over stay</div>
+        </div>
+        <div class="summary-card buy">
+          <div class="label">Buying</div>
+          <div class="total-amount" id="buy-total">—</div>
+          <div class="subtitle">net cost over stay</div>
+        </div>
+      </div>
+
+      <div class="verdict-banner" id="verdict-banner">
+        <span class="icon">💡</span>
+        <span id="verdict-text">—</span>
+      </div>
+
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Component</th>
+            <th class="rent-val">Rent</th>
+            <th class="buy-val">Buy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Initial costs</td>
+            <td class="rent-val" id="r-initial">—</td>
+            <td class="buy-val"  id="b-initial">—</td>
+          </tr>
+          <tr>
+            <td>Recurring costs</td>
+            <td class="rent-val" id="r-recurring">—</td>
+            <td class="buy-val"  id="b-recurring">—</td>
+          </tr>
+          <tr>
+            <td>Opportunity costs</td>
+            <td class="rent-val" id="r-opportunity">—</td>
+            <td class="buy-val"  id="b-opportunity">—</td>
+          </tr>
+          <tr>
+            <td>Net proceeds</td>
+            <td class="rent-val" id="r-proceeds">—</td>
+            <td class="buy-val"  id="b-proceeds">—</td>
+          </tr>
+          <tr class="total-row">
+            <td>Net total cost</td>
+            <td class="rent-val" id="r-total-row">—</td>
+            <td class="buy-val"  id="b-total-row">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="chart-section">
+        <div class="chart-title">Cost breakdown by component</div>
+        <div id="chart-rows"></div>
+      </div>
+
+      <div class="note">
+        <strong>Model notes:</strong>
+        Net cost = initial + recurring + opportunity − net_proceeds.
+        Opportunity cost is the forgone after-tax investment return on every dollar
+        spent [(market_rate) × (1 − investment_tax)].
+        Tax deductions cover mortgage interest, property tax, and the deductible
+        fraction of the HOA fee. Home appreciation and rent growth compound
+        annually. Selling proceeds are net of transaction costs, remaining
+        mortgage balance, and capital-gains tax (after exclusion).
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ── Financial math (mirrors src/RentCalculator.jl exactly) ──────────────
+
+  function mortgagePayment(p) {
+    const L = p.buy_price * (1 - p.mortgage_down / 100);
+    const r = p.mortgage_rate / 100 / 12;
+    const n = Math.round(p.mortgage_length * 12);
+    if (Math.abs(r) < 1e-12) return L / n;
+    return L * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function mortgageBalance(p, months) {
+    const L = p.buy_price * (1 - p.mortgage_down / 100);
+    const r = p.mortgage_rate / 100 / 12;
+    const n = Math.round(p.mortgage_length * 12);
+    if (months >= n) return 0;
+    const M = mortgagePayment(p);
+    if (Math.abs(r) < 1e-12) return L * (1 - months / n);
+    return L * Math.pow(1 + r, months) - M * (Math.pow(1 + r, months) - 1) / r;
+  }
+
+  // Returns array of annual interest amounts (length = nYears)
+  function annualInterest(p, nYears) {
+    const r = p.mortgage_rate / 100 / 12;
+    const result = [];
+    for (let year = 1; year <= nYears; year++) {
+      let yi = 0;
+      for (let month = 1; month <= 12; month++) {
+        const bal = mortgageBalance(p, (year - 1) * 12 + month - 1);
+        yi += bal * r;
+      }
+      result.push(yi);
+    }
+    return result;
+  }
+
+  function afterTaxRate(p) {
+    return (p.market_rate / 100) * (1 - p.tax_investment / 100);
+  }
+
+  function opportunityCost(initial, annualPayments, p) {
+    const r   = afterTaxRate(p);
+    const stay = annualPayments.length; // use actual payment years
+    let oc = initial * (Math.pow(1 + r, p.stay) - 1);
+    annualPayments.forEach((pmt, idx) => {
+      const t         = idx + 1;          // payment is at start of year t
+      const remaining = p.stay - t;
+      if (remaining > 0) oc += pmt * (Math.pow(1 + r, remaining) - 1);
+    });
+    return oc;
+  }
+
+  function rentCost(p) {
+    const nYears  = Math.round(p.stay);
+    const initial = p.rent_deposit + p.rent_broker;
+
+    const annualRec = [];
+    for (let t = 1; t <= nYears; t++) {
+      annualRec.push(
+        p.rent_monthly * 12
+        * Math.pow(1 + p.rent_rate / 100, t - 1)
+        * (1 + p.rent_insurance / 100)
+      );
+    }
+    const recurring    = annualRec.reduce((a, b) => a + b, 0);
+    const netProceeds  = p.rent_deposit;
+    const opportunity  = opportunityCost(initial, annualRec, p);
+    const total        = initial + recurring + opportunity - netProceeds;
+
+    return {
+      total:        Math.round(total),
+      initial:      Math.round(initial),
+      recurring:    Math.round(recurring),
+      opportunity:  Math.round(opportunity),
+      net_proceeds: Math.round(netProceeds),
+    };
+  }
+
+  function buyCost(p) {
+    const nYears  = Math.round(p.stay);
+    const initial = p.buy_price * (p.mortgage_down + p.buy_closing) / 100;
+    const M       = mortgagePayment(p);
+    const intSch  = annualInterest(p, nYears);
+
+    const annualRec = [];
+    for (let t = 1; t <= nYears; t++) {
+      const gross = (
+        M * 12
+        + p.buy_price * p.tax_property    / 100
+        + p.buy_price * p.buy_maintenance / 100
+        + p.buy_price * p.buy_renovation  / 100
+        + p.buy_price * p.buy_insurance   / 100
+        + p.buy_utilities * 12
+        + p.buy_common    * 12
+      );
+      const taxSavings = (
+        intSch[t - 1]                      * (p.tax_marginal / 100)
+        + p.buy_price * p.tax_property / 100 * (p.tax_marginal / 100)
+        + p.buy_common * 12 * (p.buy_deductible / 100) * (p.tax_marginal / 100)
+      );
+      annualRec.push(gross - taxSavings);
+    }
+    const recurring = annualRec.reduce((a, b) => a + b, 0);
+
+    const sellPrice     = p.buy_price * Math.pow(1 + p.price_rate / 100, p.stay);
+    const sellingCosts  = sellPrice * p.buy_selling / 100;
+    const remBalance    = mortgageBalance(p, nYears * 12);
+    const capitalGain   = sellPrice - p.buy_price;
+    const taxableGain   = Math.max(0, capitalGain - p.tax_capitalgains);
+    const capGainsTax   = taxableGain * p.tax_investment / 100;
+    const netProceeds   = sellPrice - sellingCosts - remBalance - capGainsTax;
+
+    const opportunity   = opportunityCost(initial, annualRec, p);
+    const total         = initial + recurring + opportunity - netProceeds;
+
+    return {
+      total:        Math.round(total),
+      initial:      Math.round(initial),
+      recurring:    Math.round(recurring),
+      opportunity:  Math.round(opportunity),
+      net_proceeds: Math.round(netProceeds),
+    };
+  }
+
+  // ── Formatting helpers ───────────────────────────────────────────────────
+
+  function fmt(n) {
+    const neg = n < 0;
+    const s   = Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    return (neg ? '−$' : '$') + s;
+  }
+
+  // ── Read all inputs → plain param object ────────────────────────────────
+
+  function readParams() {
+    const ids = [
+      'buy_price','stay','mortgage_rate','mortgage_down','mortgage_length',
+      'rent_monthly','rent_deposit','rent_broker','rent_insurance',
+      'price_rate','rent_rate','market_rate','inflation_rate',
+      'tax_property','tax_marginal','tax_investment','tax_capitalgains',
+      'buy_closing','buy_selling','buy_renovation','buy_maintenance',
+      'buy_insurance','buy_utilities','buy_common','buy_deductible',
+    ];
+    const p = {};
+    ids.forEach(id => {
+      p[id] = parseFloat(document.getElementById(id).value) || 0;
+    });
+    return p;
+  }
+
+  // ── Build proportional bar chart ─────────────────────────────────────────
+
+  function buildChart(r, b) {
+    const rows = [
+      { label: 'Initial costs',     rv: r.initial,      bv: b.initial      },
+      { label: 'Recurring costs',   rv: r.recurring,    bv: b.recurring    },
+      { label: 'Opportunity costs', rv: r.opportunity,  bv: b.opportunity  },
+      { label: 'Net proceeds',      rv: r.net_proceeds, bv: b.net_proceeds },
+    ];
+    const maxVal = Math.max(...rows.map(x => Math.max(x.rv, x.bv)));
+    const container = document.getElementById('chart-rows');
+    container.innerHTML = rows.map(row => {
+      const rw = maxVal > 0 ? (row.rv / maxVal * 100).toFixed(1) : 0;
+      const bw = maxVal > 0 ? (row.bv / maxVal * 100).toFixed(1) : 0;
+      return `
+        <div class="bar-group">
+          <div class="bar-label">
+            <span>${row.label}</span>
+            <span>${fmt(row.rv)} / ${fmt(row.bv)}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill rent-bar" style="width:${rw}%;margin-right:2px;opacity:.8"></div>
+            <div class="bar-fill buy-bar"  style="width:${bw}%;opacity:.8"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Main recalculate ─────────────────────────────────────────────────────
+
+  function recalculate() {
+    const p = readParams();
+    const r = rentCost(p);
+    const b = buyCost(p);
+
+    // Summary cards
+    document.getElementById('rent-total').textContent = fmt(r.total);
+    document.getElementById('buy-total').textContent  = fmt(b.total);
+
+    // Verdict
+    const cheaper = r.total <= b.total ? 'renting' : 'buying';
+    const savings  = Math.abs(r.total - b.total);
+    document.getElementById('verdict-text').innerHTML =
+      `Over <strong>${p.stay} year${p.stay !== 1 ? 's' : ''}</strong>, ` +
+      `<strong>${cheaper}</strong> saves approximately <strong>${fmt(savings)}</strong>.`;
+
+    // Breakdown rows
+    const el = id => document.getElementById(id);
+    el('r-initial').textContent    = fmt(r.initial);
+    el('b-initial').textContent    = fmt(b.initial);
+    el('r-recurring').textContent  = fmt(r.recurring);
+    el('b-recurring').textContent  = fmt(b.recurring);
+    el('r-opportunity').textContent= fmt(r.opportunity);
+    el('b-opportunity').textContent= fmt(b.opportunity);
+    el('r-proceeds').textContent   = fmt(r.net_proceeds);
+    el('b-proceeds').textContent   = fmt(b.net_proceeds);
+    el('r-total-row').textContent  = fmt(r.total);
+    el('b-total-row').textContent  = fmt(b.total);
+
+    // Highlight winner in total row
+    el('r-total-row').className = 'rent-val' + (cheaper === 'renting' ? ' winner' : '');
+    el('b-total-row').className = 'buy-val'  + (cheaper === 'buying'  ? ' winner' : '');
+
+    // Bar chart
+    buildChart(r, b);
+  }
+
+  // ── Wire up all inputs ───────────────────────────────────────────────────
+
+  document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', recalculate);
+  });
+
+  // Initial calculation on page load
+  recalculate();
+</script>
+</body>
+</html>

@@ -57,7 +57,7 @@ All financial parameters needed for a rent-vs-buy analysis.
     rent_rate::Float64        = 2.0        # annual rent increase (percent)
     market_rate::Float64      = 7.0        # annual nominal market return (percent)
     inflation_rate::Float64   = 2.0        # annual inflation rate (percent)
-    tax_property::Float64     = 1.0        # annual property tax (percent of home value)
+    tax_property::Float64     = 1.0        # annual property tax rate (% of home value / year)
     tax_marginal::Float64     = 33.3       # marginal income tax rate (percent)
     tax_investment::Float64   = 24.3       # investment / capital gains tax rate (percent)
     tax_capitalgains::Float64 = 100_000.0  # capital gains exclusion on home sale (dollars)

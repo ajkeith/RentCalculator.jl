@@ -1,7 +1,6 @@
 # RentCalculator.jl
 
 [![Build Status](https://github.com/ajkeith/RentCalculator.jl/workflows/CI/badge.svg)](https://github.com/ajkeith/RentCalculator.jl/actions)
-[![Coverage](https://codecov.io/gh/ajkeith/RentCalculator.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ajkeith/RentCalculator.jl)
 
 A Julia package for quantitative **rent-vs-buy** analysis.
 
@@ -48,6 +47,17 @@ compare(p)
 
   💡  Over 5 years, buying  saves ~$72,824.
 ```
+
+---
+
+## Web GUI
+
+A self-contained HTML calculator is included at
+[`docs/rent_calculator.html`](docs/rent_calculator.html).
+Open it in any browser — no server or internet connection required.
+Every parameter has a live input that updates the results instantly.
+
+![Rent vs. Buy Calculator GUI](https://github.com/user-attachments/assets/b0ce1255-2b99-4570-ad7b-34d254f33e34)
 
 ---
 
@@ -197,7 +207,7 @@ Annual and cumulative mortgage interest paid over `horizon` years.
 
 ## Requirements
 
-- Julia ≥ 1.9
+- Julia ≥ 1.10 (current LTS)
 - [Parameters.jl](https://github.com/mauro3/Parameters.jl)
 - [PrettyTables.jl](https://github.com/ronisbr/PrettyTables.jl)
 - [Crayons.jl](https://github.com/KristofferC/Crayons.jl)
